@@ -1,0 +1,4 @@
+/home/the-box/CLionProjects/Capstone_NN/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/the-box/CLionProjects/Capstone_NN/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/the-box/CLionProjects/Capstone_NN/cmake-build-debug/CMakeFiles/ImageReader.dir
+/home/the-box/CLionProjects/Capstone_NN/cmake-build-debug/CMakeFiles/NeuralNetwork.dir

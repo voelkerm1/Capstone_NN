@@ -1,0 +1,1 @@
+/usr/bin/c++  -g  -rdynamic CMakeFiles/NeuralNetwork.dir/NNmain.cpp.o CMakeFiles/NeuralNetwork.dir/Link/ConfigFileParser.cpp.o  -o NeuralNetwork ../OpenNN-master/Build/opennn/libopennn.a 

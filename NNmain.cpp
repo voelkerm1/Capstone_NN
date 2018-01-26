@@ -1,5 +1,5 @@
 /****************************************************************************************************************/
-/*                                                                                                              */ 
+/*                                                                                                              */
 /*   Xavier University 2017                                                                                     */
 /*                                                                                                              */
 /*   CSCI 380 Opium Farm Finder                                                                                 */
@@ -39,263 +39,324 @@
 #include "opencv2/core/core.hpp"
 
 //Custom Class Includes
-#include "Include/ImageReader.h"
 #include "Include/ConfigFileParser.h"
 
 
 using namespace OpenNN;
 using namespace std;
 using namespace cv;
-/*
 
 
+string getInput(string prompt){
 
-// Moves data through network
-Vector<double> executeNetwork(Vector<double> imageData, NeuralNetwork network){
+    string response;
 
-    //Make temporary storage space
-    Vector<double> layerOutput;
-    double perceptronOutput;
+    cout << prompt << endl;
 
-    //Grabs the MLP form the network
-    MultilayerPerceptron* mlp = network.get_multilayer_perceptron_pointer();
+    cin >> response;
 
-    for(int i = 0; i < network.get_layers_number();i++) //Spool through each perceptron layer
-    {
-        for(int j = 0; j < mlp->get_layer_pointer(i)->get_perceptrons_number();j++)  //Calculate output for each perceptron based on previous layer's output
-        {
-            perceptronOutput = mlp->get_layer_pointer(i)->get_perceptron(j).calculate_output(imageData);
-            layerOutput.push_back(perceptronOutput);  // Update layer input for next layer
-        }
-        imageData = layerOutput;
-        layerOutput.clear();
-    }
-    return imageData;
+    return response;
+
 }
-*/
+
+//Checks to see if file exists
+bool doesFileExist(string fileName)
+{
+    ifstream infile(fileName.c_str());
+    return infile.good();
+}
 
 int main(int argc, const char** argv)
 {
 
-    try
-	{
-		/*//Begin Config File Parse
-        ConfigFileParser configuration = ConfigFileParser("Config_File.txt");
-        vector<vector<string>> layerVector = configuration.readFile();
+    string trainOrTest;
+    cout<< "Would you like to train or test?"<< endl;
+    cin >> trainOrTest;
+    if (trainOrTest == "train"){
+        try {
+            /*
+             * Build NN here based on the config files
+             * We will train inside the loop bellow
+             */
+            NeuralNetwork * neural_net1;
+            DataSet ds;
 
-		//istringstream inputs(layerVector[0][0]); //Grab the input configuration value (remove, needs to be determined by image)
-		//int inputNumber = 0;
-		//inputs >> inputNumber;
+            //This gets the input file key name and initializes the file counter and the first input file
 
-		istringstream layers(layerVector[1][0]); //Grab the layer number value
-		int layerNumber = 0;
-		layers >> layerNumber;
+            int fileCounter = 1;
 
-		istringstream perceptrons(layerVector[2][0]); //Grab the perceptrons per layer value
-		int perceptronNumber = 0;
-		perceptrons >> perceptronNumber;
+            string inputFileName;
 
-		//Begin Neural Network Construction
+            cout<< "Enter training filename without extension: "<< endl;
+            cin>> inputFileName;
 
-		Vector<int> architecture; //Defines NN architecture as <# of inputs, perceptrons in layer 1, ... , perceptrons in layer n>
-		architecture.push_back(151389);   //Adds # of inputs to architecture (need to remove hardcoding)
-		for (int i = 0; i < layerNumber; i++)  //Add perceptrons per layer to architecture
-		{
-			architecture.push_back(perceptronNumber);
-		}*/
+            string delimit;
+            cout<< "Enter separator type as Comma, Space, Tab..., : "<< endl;
+            cin>> delimit;
 
-        ///////--Set the Learning Rate/Error update rate--//////
-        const double learning_rate = 0.3;
-        const size_t iterations_num = 20;
-        const size_t initial_iterations_num = 10;
-        const size_t display_period = 10;
+            string outFileName;
+            cout<< "What should the output file be called?"<< endl;
+            cin>> outFileName;
 
-        // ----------------------------------------------------------------------//
-        // -----------Get the DataSet------------//
-        // ----------------------------------------------------------------------//
+            string currentInFileName = inputFileName + to_string(fileCounter) + ".dat";
 
-        //Create a new dataset object to work with
-        DataSet ds;
-        ds.set_data_file_name("../data/mnist_train_100.dat");
-        ds.set_separator("Comma");
-        ds.load_data();
+            cout<< currentInFileName <<endl;
 
-        //create vector for input indices
-        Vector<int> input_indices(0,784);
+            string currentOutFileName = outFileName + to_string(fileCounter) + ".xml";
 
-        for(int i = 0; i < input_indices.size(); i++){
-            int x = i+1;
-            input_indices.at(i) = x;
+            string constructionType;
+            cout<< "Should a network be built from scratch or built on an existing network? Type scratch or existing. "<< endl;
+            cin>> constructionType;
+            ///////--Set the Learning Rate/Error update rate--//////
+
+            const static double learning_rate = 0.3;
+            const static size_t iterations_num = 1;
+            const static size_t initial_iterations_num = 1;
+            const static size_t display_period = 1;
+            const static size_t output_num = 1;
+
+
+            // ----------------------------------------------------------------------//
+            // -----------Get the first DataSet------------//
+            // ----------------------------------------------------------------------//
+
+            ds.set_data_file_name(currentInFileName);
+            ds.set_separator(delimit);
+            cout << "loading data..." << endl;
+            ds.load_data();
+            cout << "data loaded success" << endl;
+            cout << ds.get_data() << endl;
+            //Set targets and inputs for the data
+            Variables *var_pointer = ds.get_variables_pointer();
+            cout << "get variables success" << endl;
+            //var_pointer -> set_name(30000, "Tulips");
+            cout << "set variable name success" << endl;
+            //var_pointer->set_use(0, Variables::Target);
+            var_pointer->set_use(30000, Variables::Target);
+            //var_pointer->set_input_indices(input_indices);
+
+            cout << "index0: " << var_pointer->write_use(0) << endl;
+            cout << "index1: " << var_pointer->write_use(1) << endl;
+            cout << "index2: " << var_pointer->write_use(2) << endl;
+            cout << "index29999: " << var_pointer->write_use(29999) << endl;
+            cout << "index30000: " << var_pointer->write_use(30000) << endl;
+            cout << "index30000: " << ds.get_variable(30000) << endl;
+
+            //Containers for input and target info may be helpful at some point
+            const Matrix<string> inputs_info = var_pointer->arrange_inputs_information();
+            const Matrix<string> targets_info = var_pointer->arrange_targets_information();
+
+            //Pointers to instances of training data may be useful
+            Instances *instances_pointer = ds.get_instances_pointer();
+            instances_pointer->split_random_indices();//looks at a random subset of instances
+
+            //not sure if this is the correct scaling we want (we want all numbers between 0-1 i think)
+            const OpenNN::Vector<Statistics<double> > input_stats = ds.scale_inputs_minimum_maximum(); //scales inputs to smaller range
+
+
+            // ----------------------------------------------------------------------//
+            // -----------Create NeuralNet------------//
+            // ----------------------------------------------------------------------//
+
+
+
+            if (constructionType == "scratch") {
+                cout<< "scratch selected"<<endl;
+                //MLP for the mnist dataset to take in 28x28 image and output probabilities for 1-10
+                MultilayerPerceptron mlp = MultilayerPerceptron(
+                        var_pointer->count_inputs_number(), 100, var_pointer -> count_targets_number()
+                );
+                cout<< "scratch perceptron"<<endl;
+                //MultilayerPerceptron mlp = MultilayerPerceptron(architecture); //Creates a multilayer perceptron with the architecture
+                neural_net1 = new NeuralNetwork(mlp);    //Creates a Neural Network with the multilayer perceptron
+                cout<< "scratch neural net"<<endl;
+            } else {
+                cout<< "scratch not selected"<<endl;
+
+                string net_file = getInput("Enter NN .xml filename: ");
+                neural_net1 = new NeuralNetwork(net_file);
+                cout<< "not scratch neural net"<<endl;
+            }
+
+
+            //Probably good to be able to access inputs/outputs if necessary
+            Inputs *inputs_pointer = neural_net1->get_inputs_pointer();
+            inputs_pointer->set_information(inputs_info); //currently empty we can fill in though
+
+            Outputs *outputs_pointer = neural_net1->get_outputs_pointer();
+            outputs_pointer->set_information(targets_info);//currently empty we can fill in though
+
+            //Create the scaling layer for the NN
+            neural_net1->construct_scaling_layer();
+            ScalingLayer *sL_pointer = neural_net1->get_scaling_layer_pointer();
+            sL_pointer->set_statistics(input_stats);
+            sL_pointer->set_scaling_method(ScalingLayer::NoScaling);//no more of this until were sure of its use
+
+            //Construct Layer to interpret binary outputs of classification gives us a yes or no
+            neural_net1->construct_probabilistic_layer();
+            ProbabilisticLayer *pL_pointer = neural_net1->get_probabilistic_layer_pointer();
+            pL_pointer->set_probabilistic_method(ProbabilisticLayer::Probability);
+
+
+
+
+            //Checks to see if file exists and trains if it does
+            while (doesFileExist(currentInFileName)) {
+                cout<< "top of loop"<<endl;
+
+                /*
+                * Read in the given file and train the network
+                *
+                * Then when done with the given file, output to an xml that is the currentOutFileName.
+                */
+                // ----------------------------------------------------------------------//
+                // -----------Get the DataSet------------//
+                // ----------------------------------------------------------------------//
+
+                if (fileCounter !=1){
+                    ds.set_data_file_name(currentInFileName);
+                    ds.set_separator(delimit);
+                    cout << "loading data..." << endl;
+                    ds.load_data();
+                    cout << "data loaded success" << endl;
+                }
+
+                // ----------------------------------------------------------------------//
+                // -----------Create Error Container/Loss Index------------//
+                // ----------------------------------------------------------------------//
+
+                LossIndex loss(neural_net1, &ds); //default is normal squared
+                loss.set_error_type("SUM_SQUARED_ERROR");
+
+                // ----------------------------------------------------------------------//
+                // -----------Knowledge------------//
+                // ----------------------------------------------------------------------//
+
+                //Create the strategy and pass it the loss which it will learn, with/from?
+                TrainingStrategy trainer(&loss);
+
+
+                /*//set initial training method hopefully saves time
+                trainer.set_initialization_type(TrainingStrategy::EVOLUTIONARY_ALGORITHM);
+                EvolutionaryAlgorithm* evo_pointer = trainer.get_evolutionary_algorithm_pointer();
+                evo_pointer -> set_maximum_generations_number(initial_iterations_num);*/
+
+                //set main training method GradDesc
+                trainer.set_main_type(TrainingStrategy::GRADIENT_DESCENT);
+                GradientDescent *grad_pointer = trainer.get_gradient_descent_pointer();
+                grad_pointer->set_maximum_iterations_number(iterations_num);
+                grad_pointer->set_display_period(display_period);
+
+                //QuasiNewton
+                /*QuasiNewtonMethod* qNM = trainer.get_quasi_Newton_method_pointer();
+                qNM -> set_minimum_loss_increase(1.0e-4);*/
+
+                //Do the training
+                TrainingStrategy::Results training_results = trainer.perform_training();
+
+                //Save training strategy
+                string ts_string = "../Results/training_strategy" + to_string(fileCounter) + ".xml";
+                trainer.save(ts_string);
+
+                //linReg_results.save("../Results/linReg_results3.dat");
+                string training_results_string = "../Results/training_results" + to_string(fileCounter) + ".dat";
+                training_results.save(training_results_string);
+
+                //Save NN to .xml ----------------
+                neural_net1->save(outFileName);
+                //---------------------------------
+
+                //Setup for next iteration
+                fileCounter++;
+
+                //get new input and output file names
+                currentInFileName = inputFileName + to_string(fileCounter);
+
+                currentOutFileName = outFileName + to_string(fileCounter);
+            }
+            return 0;
         }
+        catch(exception& e)
+        {
+            cout << e.what() << endl;
 
-        //Set targets and inputs for the data
-        Variables* var_pointer = ds.get_variables_pointer();
-        var_pointer->set_use(0, Variables::Target);
-        var_pointer->set_use(784, Variables::Input);
-        var_pointer->set_input_indices(input_indices);
-
-        cout <<"index0: "<< var_pointer ->  write_use(0) << endl;
-        cout <<"index1: "<< var_pointer ->  write_use(1) << endl;
-        cout <<"index2: "<< var_pointer ->  write_use(2) << endl;
-        cout <<"index783: "<< var_pointer ->  write_use(783) << endl;
-        cout <<"index784: "<< var_pointer ->  write_use(783) << endl;
-
-        //Containers for input and target info may be helpful at some point
-        const Matrix<string> inputs_info = var_pointer->arrange_inputs_information();
-        const Matrix<string> targets_info = var_pointer->arrange_targets_information();
-
-        //Pointers to instances of training data may be useful
-        Instances* instances_pointer = ds.get_instances_pointer();
-        instances_pointer->split_random_indices();//looks at a random subset of instances
-
-        //not sure if this is the correct scaling we want (we want all numbers between 0-1 i think)
-        const Vector<Statistics<double> > input_stats = ds.scale_inputs_minimum_maximum(); //scales inputs to smaller range
-
-
-        // ----------------------------------------------------------------------//
-        // -----------Create NeuralNet------------//
-        // ----------------------------------------------------------------------//
-
-        //MLP for the mnist dataset to take in 28x28 image and output probabilities for 1-10
-        MultilayerPerceptron mlp = MultilayerPerceptron(
-                var_pointer->count_inputs_number(), 100, var_pointer->count_targets_number()
-        );
-
-		//MultilayerPerceptron mlp = MultilayerPerceptron(architecture); //Creates a multilayer perceptron with the architecture
-	    NeuralNetwork neural_net1 = NeuralNetwork(mlp);	 //Creates a Neural Network with the multilayer perceptron
-
-        //Probably good to be able to access inputs/outputs if necessary
-        Inputs* inputs_pointer = neural_net1.get_inputs_pointer();
-        inputs_pointer -> set_information(inputs_info); //currently empty we can fill in though
-
-        Outputs* outputs_pointer = neural_net1.get_outputs_pointer();
-        outputs_pointer -> set_information(targets_info);//currently empty we can fill in though
-
-        //Create the scaling layer for the NN
-        neural_net1.construct_scaling_layer();
-        ScalingLayer* sL_pointer = neural_net1.get_scaling_layer_pointer();
-        sL_pointer -> set_statistics(input_stats);
-        sL_pointer -> set_scaling_method(ScalingLayer::NoScaling);//no more of this until were sure of its use
-
-        //Construct Layer to interpret binary outputs of classification gives us a yes or no
-        neural_net1.construct_probabilistic_layer();
-        ProbabilisticLayer* pL_pointer = neural_net1.get_probabilistic_layer_pointer();
-        pL_pointer->set_probabilistic_method(ProbabilisticLayer:: Probability);
-
-        // ----------------------------------------------------------------------//
-        // -----------Create Error Container/Loss Index------------//
-        // ----------------------------------------------------------------------//
-
-        LossIndex loss(&neural_net1, &ds);
-        loss.set_error_type("NORMALIZED_SQUARED_ERROR");
-
-
-        // ----------------------------------------------------------------------//
-        // -----------Knowledge------------//
-        // ----------------------------------------------------------------------//
-
-        //Create the strategy and pass it the loss which it will learn, with/from?
-        TrainingStrategy trainer(&loss);
-
-
-        /*//set initial training method hopefully saves time
-        trainer.set_initialization_type(TrainingStrategy::EVOLUTIONARY_ALGORITHM);
-        EvolutionaryAlgorithm* evo_pointer = trainer.get_evolutionary_algorithm_pointer();
-        evo_pointer -> set_maximum_generations_number(initial_iterations_num);*/
-
-        //set main training method
-        trainer.set_main_type(TrainingStrategy::GRADIENT_DESCENT);
-        GradientDescent* grad_pointer = trainer.get_gradient_descent_pointer();
-        grad_pointer -> set_maximum_iterations_number(iterations_num);
-        grad_pointer -> set_display_period(display_period);
-
-        //Do the training
-        TrainingStrategy::Results training_results = trainer.perform_training();
-
-
+            return(1);
+        }
+    }
+    else if (trainOrTest == "test"){
         // ----------------------------------------------------------------------//
         // -----------Test if its working------------//
         // ----------------------------------------------------------------------//
-        /*DataSet testData;
-        testData.set_file_type("csv");
-        testData.set_data_file_name("../data/mnist_test_10.csv");
-        testData.set_separator("Comma");
-        testData.load_data();*/
-        instances_pointer -> set_testing();
+        DataSet testData;
+        NeuralNetwork net2;
 
-        TestingAnalysis test_analysis(&neural_net1, &ds);
+        string testfile;
+        string testDelimit;
+        cout << "Enter test filename: " << endl;
+        getline(cin, testfile);
+        cout << "Enter separator type as Comma, Space, Tab...: " << endl;
+        getline(cin, testDelimit);
 
+        testData.set_data_file_name(testfile);
+        testData.set_separator(testDelimit);
+        testData.load_data();
 
-        Vector<double> classification_errors = test_analysis.calculate_classification_testing_errors();
+        Variables *test_var_pointer = testData.get_variables_pointer();
+
+        test_var_pointer->set_use(30000, Variables::Target);
+
+        cout << "index1: " << test_var_pointer->write_use(1) << endl;
+        cout << "index30000: " << test_var_pointer->write_use(30000) << endl;
+        cout << "index30000: " << testData.get_variable(30000) << endl;
+
+        Instances *test_instance_pointer = testData.get_instances_pointer();
+        test_instance_pointer->set_testing();
+
+        string testNet;
+        cout << "Enter NN filename to test: " << endl;
+        getline(cin, testNet);
+
+        net2 = NeuralNetwork(testNet);
+
+        TestingAnalysis test_analysis(&net2, &testData);
+
+        cout << "begin testing" << endl;
 
         //OpenNN uses this confusion parameter how random our results appear
         Matrix<size_t> confusion = test_analysis.calculate_confusion();
 
-        //Save our results to make sense of them
-        ds.save("../Results/dataSet.xml");
+        cout << "done confusion" << endl;
 
-        neural_net1.save("../Results/neural_net1.xml");
-        neural_net1.save_expression("../Results/expression.txt");
+        //Cacluate Linear Resgression Results
+        //TestingAnalysis::LinearRegressionResults linReg_results = test_analysis.perform_linear_regression_analysis();
 
-        trainer.save("../Results/training_strategy.xml");
-        training_results.save("../Results/training_results.dat");
+        //Calculate Binary Classification Results
+        OpenNN::Vector<double> binary_class_tests = test_analysis.calculate_binary_classification_tests();
 
-        confusion.save("../Results/confusion.dat");
-        classification_errors.save("../Results/classificationErrors.dat");
+        cout << "done binary class tests" << endl;
 
+        OpenNN::Vector<double> classification_errors = test_analysis.calculate_classification_testing_errors();
 
+        cout << "done class error" << endl;
 
+        ScalingLayer* testL_pointer = net2.get_scaling_layer_pointer();
+        testL_pointer->set_scaling_method(ScalingLayer::MinimumMaximum);
 
+        string confusion_string = "../Results/confusion.dat";
+        confusion.save(confusion_string);
+        //classification_errors.save("../Results/classificationErrors.dat");
 
-
-
-
-        /*//Show architecture
-        int perceptron_count = 0;
-		for(int i = 1; i < architecture.size(); i++)
-		{
-			perceptron_count = perceptron_count + architecture[i];	//Sums up perceptron total from architecture definition vector
-		}
-
-	    const int layer_number = neural_net1.get_layers_number();  // Number of layers for printing
-		
-		cout << "Perceptron Count: " << perceptron_count << endl;
-		cout << "Layer Count: " << layer_number << endl;
+        string bct_string = "../Results/binary_class_tests.dat";
+        binary_class_tests.save(bct_string);
 
 
-        // Begin Image Import and Processing
-        ImageReader imageReader;
-
-        imageReader.setInputFile("MyPic.jpeg");
-        vector<uchar> array = imageReader.readFile();
-
-        // Cast uchar to double
-        Vector<double> imageData;
-        imageData.resize(array.size());
-        for(int i=0; i < array.size(); i++)
-        {
-            imageData[i] = (double)array[i];
-        }
-
-        //Send data through Network
-        imageData = executeNetwork(imageData, neural_net1);
-
-        //Print NN Output
-        cout << "Neural Network Result: " << endl;
-        for(int i = 0; i < imageData.size();i++)
-        {
-            cout << imageData[i] << endl;
-        }*/
-        return 0;
     }
-    catch(exception& e)
-    {
-        cout << e.what() << endl;
-
-        return(1);
+    else{
+        cout<< "not a choice"<<endl;
     }
 
-}  
+
+}
 
 
 // OpenNN: Open Neural Networks Library.
